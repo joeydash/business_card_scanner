@@ -51,3 +51,4 @@ app.*.map.json
 *.env
 google-services.json
 GoogleService-Info.plist
+whatsub.keystore

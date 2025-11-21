@@ -18,6 +18,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isProcessing = false;
 
   Future<void> _processImage(String imagePath) async {
+    debugPrint('Processing image at: $imagePath');
     if (_isProcessing) return;
 
     setState(() {
@@ -41,15 +42,7 @@ class _CameraScreenState extends State<CameraScreen> {
       });
 
       if (mounted) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Business card saved!'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        
-        // Return to home screen
+        // Return to home screen immediately
         Navigator.of(context).pop(true);
       }
     } catch (e) {
@@ -116,14 +109,51 @@ class _CameraScreenState extends State<CameraScreen> {
                 painter: CardOverlayPainter(),
                 child: Container(),
               ),
-        bottomActionsBuilder: (state) => AwesomeBottomActions(
-          state: state,
-          left: Container(), // Remove left action
-          captureButton: AwesomeCaptureButton(
-            state: state,
-          ),
-          right: AwesomeFlashButton(
-            state: state,
+        bottomActionsBuilder: (state) => Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              AwesomeFlashButton(state: state),
+              GestureDetector(
+                onTap: () {
+                  state.when(
+                    onPhotoMode: (photoState) async {
+                      try {
+                        final request = await photoState.takePhoto();
+                        final path = request.when(
+                          single: (single) => single.file?.path,
+                          multiple: (multiple) => multiple.fileBySensor.values.first?.path,
+                        );
+                        if (path != null) {
+                          _processImage(path);
+                        }
+                      } catch (e) {
+                        debugPrint('Capture failed: $e');
+                      }
+                    },
+                  );
+                },
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4),
+                  ),
+                  padding: const EdgeInsets.all(6),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+              // Empty container to balance the row since we removed the switch camera button
+              const SizedBox(width: 32),
+            ],
           ),
         ),
       ),

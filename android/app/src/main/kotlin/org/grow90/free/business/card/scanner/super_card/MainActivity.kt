@@ -1,4 +1,4 @@
-package com.example.business_card_scanner
+package org.grow90.free.business.card.scanner.super_card
 
 import io.flutter.embedding.android.FlutterActivity
 

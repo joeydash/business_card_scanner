@@ -40,6 +40,19 @@ class CardStorageService {
     }
   }
   
+  // Update a card by index
+  Future<void> updateCard(int index, BusinessCardData updatedCard) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cards = await getAllCards();
+    
+    if (index >= 0 && index < cards.length) {
+      cards[index] = updatedCard;
+      final cardsJson = cards.map((card) => card.toJson()).toList();
+      await prefs.setString(_cardsKey, jsonEncode(cardsJson));
+    }
+  }
+  
+  
   // Clear all cards
   Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();

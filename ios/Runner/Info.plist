@@ -49,5 +49,9 @@
 	<string>We need access to your camera to scan business cards.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need access to your microphone for video recording (required by camera plugin).</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

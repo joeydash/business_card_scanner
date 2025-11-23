@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 class BusinessCardData {
+  final int? id; // SQLite ID
+
   // Personal Information
   final String? personName;
   final String? jobTitle;
@@ -27,10 +31,15 @@ class BusinessCardData {
   // Original OCR text
   final String rawText;
   
+  // Metadata
+  final DateTime? scannedAt;
+  final int? groupId;
+  
   // Confidence scores (optional)
   final Map<String, double>? confidenceScores;
 
   BusinessCardData({
+    this.id,
     this.personName,
     this.jobTitle,
     this.pronouns,
@@ -50,10 +59,73 @@ class BusinessCardData {
     this.tagline,
     required this.rawText,
     this.confidenceScores,
+    this.scannedAt,
+    this.groupId,
   });
 
-  // Convert to JSON
+  // Convert to Map for SQLite
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'personName': personName,
+      'jobTitle': jobTitle,
+      'pronouns': pronouns,
+      'emails': jsonEncode(emails),
+      'phones': jsonEncode(phones),
+      'websites': jsonEncode(websites),
+      'linkedIn': linkedIn,
+      'twitter': twitter,
+      'companyName': companyName,
+      'department': department,
+      'address': address,
+      'city': city,
+      'state': state,
+      'postalCode': postalCode,
+      'country': country,
+      'fax': fax,
+      'tagline': tagline,
+      'rawText': rawText,
+      'confidenceScores': confidenceScores != null ? jsonEncode(confidenceScores) : null,
+      'scannedAt': scannedAt?.toIso8601String(),
+      'groupId': groupId,
+    };
+  }
+
+  // Create from Map (SQLite)
+  factory BusinessCardData.fromMap(Map<String, dynamic> map) {
+    return BusinessCardData(
+      id: map['id'],
+      personName: map['personName'],
+      jobTitle: map['jobTitle'],
+      pronouns: map['pronouns'],
+      emails: List<String>.from(jsonDecode(map['emails'] ?? '[]')),
+      phones: List<String>.from(jsonDecode(map['phones'] ?? '[]')),
+      websites: List<String>.from(jsonDecode(map['websites'] ?? '[]')),
+      linkedIn: map['linkedIn'],
+      twitter: map['twitter'],
+      companyName: map['companyName'],
+      department: map['department'],
+      address: map['address'],
+      city: map['city'],
+      state: map['state'],
+      postalCode: map['postalCode'],
+      country: map['country'],
+      fax: map['fax'],
+      tagline: map['tagline'],
+      rawText: map['rawText'] ?? '',
+      confidenceScores: map['confidenceScores'] != null
+          ? Map<String, double>.from(jsonDecode(map['confidenceScores']))
+          : null,
+      scannedAt: map['scannedAt'] != null 
+          ? DateTime.parse(map['scannedAt']) 
+          : null,
+      groupId: map['groupId'],
+    );
+  }
+
+  // Convert to JSON (Legacy/Export)
   Map<String, dynamic> toJson() => {
+    'id': id,
     'personName': personName,
     'jobTitle': jobTitle,
     'pronouns': pronouns,
@@ -73,11 +145,13 @@ class BusinessCardData {
     'tagline': tagline,
     'rawText': rawText,
     'confidenceScores': confidenceScores,
+    'scannedAt': scannedAt?.toIso8601String(),
   };
 
-  // Create from JSON
+  // Create from JSON (Legacy/Export)
   factory BusinessCardData.fromJson(Map<String, dynamic> json) {
     return BusinessCardData(
+      id: json['id'],
       personName: json['personName'],
       jobTitle: json['jobTitle'],
       pronouns: json['pronouns'],
@@ -99,11 +173,15 @@ class BusinessCardData {
       confidenceScores: json['confidenceScores'] != null
           ? Map<String, double>.from(json['confidenceScores'])
           : null,
+      scannedAt: json['scannedAt'] != null 
+          ? DateTime.parse(json['scannedAt']) 
+          : null,
     );
   }
 
   // Copy with method
   BusinessCardData copyWith({
+    int? id,
     String? personName,
     String? jobTitle,
     String? pronouns,
@@ -123,8 +201,11 @@ class BusinessCardData {
     String? tagline,
     String? rawText,
     Map<String, double>? confidenceScores,
+    DateTime? scannedAt,
+    int? groupId,
   }) {
     return BusinessCardData(
+      id: id ?? this.id,
       personName: personName ?? this.personName,
       jobTitle: jobTitle ?? this.jobTitle,
       pronouns: pronouns ?? this.pronouns,
@@ -144,6 +225,8 @@ class BusinessCardData {
       tagline: tagline ?? this.tagline,
       rawText: rawText ?? this.rawText,
       confidenceScores: confidenceScores ?? this.confidenceScores,
+      scannedAt: scannedAt ?? this.scannedAt,
+      groupId: groupId ?? this.groupId,
     );
   }
 }

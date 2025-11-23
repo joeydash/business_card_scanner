@@ -1,67 +1,93 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/business_card_data.dart';
+import 'database_helper.dart';
 
 class CardStorageService {
   static const String _cardsKey = 'scanned_cards';
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  
+  // Initialize and migrate if needed
+  Future<void> init() async {
+    await _migrateFromSharedPreferences();
+  }
+
+  // Migrate data from SharedPreferences to SQLite
+  Future<void> _migrateFromSharedPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cardsString = prefs.getString(_cardsKey);
+    
+    if (cardsString != null) {
+      try {
+        final List<dynamic> cardsJson = jsonDecode(cardsString);
+        final cards = cardsJson.map((json) => BusinessCardData.fromJson(json)).toList();
+        
+        // Insert all cards into SQLite
+        for (final card in cards) {
+          // Ensure scannedAt is set during migration
+          final cardToSave = card.scannedAt == null 
+              ? card.copyWith(scannedAt: DateTime.now()) 
+              : card;
+          await _dbHelper.create(cardToSave);
+        }
+        
+        // Clear SharedPreferences after successful migration
+        await prefs.remove(_cardsKey);
+        debugPrint('Successfully migrated ${cards.length} cards to SQLite');
+      } catch (e) {
+        debugPrint('Error migrating cards: $e');
+      }
+    }
+  }
   
   // Save a new business card
   Future<void> saveCard(BusinessCardData card) async {
-    final prefs = await SharedPreferences.getInstance();
-    final cards = await getAllCards();
-    cards.add(card);
-    
-    final cardsJson = cards.map((card) => card.toJson()).toList();
-    await prefs.setString(_cardsKey, jsonEncode(cardsJson));
+    // Ensure scannedAt is set
+    final cardToSave = card.scannedAt == null 
+        ? card.copyWith(scannedAt: DateTime.now()) 
+        : card;
+        
+    await _dbHelper.create(cardToSave);
   }
   
   // Get all saved cards
   Future<List<BusinessCardData>> getAllCards() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cardsString = prefs.getString(_cardsKey);
-    
-    if (cardsString == null) {
-      return [];
-    }
-    
-    final List<dynamic> cardsJson = jsonDecode(cardsString);
-    return cardsJson.map((json) => BusinessCardData.fromJson(json)).toList();
+    // Check for migration on first load
+    await _migrateFromSharedPreferences();
+    return await _dbHelper.readAllCards();
+  }
+
+  // Get cards with pagination for lazy loading
+  Future<List<BusinessCardData>> getCardsPaginated({
+    required int limit,
+    required int offset,
+  }) async {
+    // Check for migration on first load
+    await _migrateFromSharedPreferences();
+    return await _dbHelper.readCardsPaginated(limit: limit, offset: offset);
+  }
+
+  // Get total count of cards
+  Future<int> getCardCount() async {
+    await _migrateFromSharedPreferences();
+    return await _dbHelper.getCardCount();
   }
   
-  // Delete a card by index
-  Future<void> deleteCard(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    final cards = await getAllCards();
-    
-    if (index >= 0 && index < cards.length) {
-      cards.removeAt(index);
-      final cardsJson = cards.map((card) => card.toJson()).toList();
-      await prefs.setString(_cardsKey, jsonEncode(cardsJson));
-    }
+  // Delete a card by ID
+  Future<void> deleteCard(int id) async {
+    await _dbHelper.delete(id);
   }
   
-  // Update a card by index
-  Future<void> updateCard(int index, BusinessCardData updatedCard) async {
-    final prefs = await SharedPreferences.getInstance();
-    final cards = await getAllCards();
-    
-    if (index >= 0 && index < cards.length) {
-      cards[index] = updatedCard;
-      final cardsJson = cards.map((card) => card.toJson()).toList();
-      await prefs.setString(_cardsKey, jsonEncode(cardsJson));
+  // Update a card
+  Future<void> updateCard(BusinessCardData updatedCard) async {
+    if (updatedCard.id != null) {
+      await _dbHelper.update(updatedCard, updatedCard.id!);
     }
   }
-  
   
   // Clear all cards
   Future<void> clearAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_cardsKey);
-  }
-  
-  // Get card count
-  Future<int> getCardCount() async {
-    final cards = await getAllCards();
-    return cards.length;
+    await _dbHelper.deleteAll();
   }
 }

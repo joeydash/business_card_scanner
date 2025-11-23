@@ -5,12 +5,10 @@ import '../../../services/card_storage_service.dart';
 
 class StructuredResultScreen extends StatefulWidget {
   final BusinessCardData data;
-  final int? cardIndex;
 
   const StructuredResultScreen({
     super.key,
     required this.data,
-    this.cardIndex,
   });
 
   @override
@@ -97,6 +95,7 @@ class _StructuredResultScreenState extends State<StructuredResultScreen> {
       if (_isEditMode) {
         // Exiting edit mode - update the data
         _editedData = BusinessCardData(
+          id: _editedData.id, // Preserve ID
           personName: _personNameController.text.isEmpty ? null : _personNameController.text,
           jobTitle: _jobTitleController.text.isEmpty ? null : _jobTitleController.text,
           pronouns: _pronounsController.text.isEmpty ? null : _pronounsController.text,
@@ -115,6 +114,7 @@ class _StructuredResultScreenState extends State<StructuredResultScreen> {
           fax: _faxController.text.isEmpty ? null : _faxController.text,
           tagline: _taglineController.text.isEmpty ? null : _taglineController.text,
           rawText: _editedData.rawText,
+          scannedAt: _editedData.scannedAt, // Preserve timestamp
         );
       }
       _isEditMode = !_isEditMode;
@@ -124,9 +124,9 @@ class _StructuredResultScreenState extends State<StructuredResultScreen> {
   Future<void> _saveCard() async {
     setState(() => _isSaving = true);
     try {
-      if (widget.cardIndex != null) {
+      if (_editedData.id != null) {
         // Update existing card
-        await _storageService.updateCard(widget.cardIndex!, _editedData);
+        await _storageService.updateCard(_editedData);
       } else {
         // Save new card
         await _storageService.saveCard(_editedData);

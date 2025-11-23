@@ -2,7 +2,7 @@ name: business_card_scanner
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 4.0.1+401
+version: 4.0.2+402
 
 environment:
   sdk: ^3.10.0-290.4.beta
@@ -43,6 +43,13 @@ dependencies:
   excel: ^4.0.6
   shared_preferences: ^2.2.2
   share_plus: ^10.1.4
+  dio: ^5.4.0
+  flutter_secure_storage: ^9.0.0
+  webview_flutter: ^4.4.0
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  cunning_document_scanner: ^1.0.4
+  google_mlkit_document_scanner: ^0.2.0
 
 dev_dependencies:
   flutter_test:
@@ -61,7 +68,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -99,7 +105,7 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   image_path: "assets/images/logo.png"
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/images/logo.png"
